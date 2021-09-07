@@ -450,6 +450,11 @@ namespace WSL.KINGDEE.XW.PlugIn
 
             StringBuilder sb = new StringBuilder();
 
+            if (Entrys.Where(x => Convert.ToBoolean(x["FCheckBox"])).ToList().Count <= 0)
+            {
+                sb.AppendLine("未选中任何数据!");
+            }  
+
             int i = 0;
             foreach (DynamicObject entry in Entrys)
             {
