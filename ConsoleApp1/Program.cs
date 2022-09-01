@@ -26,5 +26,13 @@ namespace ConsoleApp1
            string responseInfo = ApiHelper.HttpPostFrom(url, requestInfo);
             #endregion
         }
+
+        void SyncProduct()
+        {
+            string enterpriseCode = "";
+            string url = $@"https://www.shfda.org/platform/rest/v2/enterprises/{enterpriseCode}/products";
+
+            string data = $@"";
+        }
     }
 }

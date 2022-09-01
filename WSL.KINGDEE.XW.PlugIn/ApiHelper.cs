@@ -11,23 +11,48 @@ namespace WSL.KINGDEE.XW.PlugIn
 {
     public class ApiHelper
     {
-        public static string Post(string url,string para)
+        public static string Post(string url,string para,string token)
         {
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);//创建请求对象
             request.Method = "Post";//请求方式
+            request.Headers.Add("AUTH_TOKEN", token);
             request.KeepAlive = true;
             request.ContentType = "application/json";//请求头参数
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(para);//设置请求参数
             request.ContentLength = bytes.Length;
-            Stream stream = request.GetRequestStream();
-            stream.Write(bytes, 0, bytes.Length);//写入参数
-            stream.Close();
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())//响应对象
+
+            try
             {
-                StreamReader reader = new StreamReader(response.GetResponseStream());
-                string str = reader.ReadToEnd();//获取返回的页面信息
-                return str;
+                Stream stream = request.GetRequestStream();
+                stream.Write(bytes, 0, bytes.Length);//写入参数
+                stream.Close();
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())//响应对象
+                {
+                    StreamReader reader = new StreamReader(response.GetResponseStream());
+                    string str = reader.ReadToEnd();//获取返回的页面信息
+                    return str;
+                }
             }
+            catch (WebException e)
+            {
+                using (WebResponse response = e.Response)
+                {
+                    HttpWebResponse httpResponse = (HttpWebResponse)response;
+                    //Console.WriteLine(e);
+                    if (response == null)
+                    {
+                        return e.ToString();
+                    }
+                    using (Stream data = response.GetResponseStream())
+                    using (var reader = new StreamReader(data))
+                    {
+                        string text = reader.ReadToEnd();
+                        // Console.WriteLine(text);
+                        return text;
+                    }
+                }
+            }
+            
         }
 
         public static string HttpPostFrom(string url, string data)
