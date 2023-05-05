@@ -64,11 +64,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccessTokenModel.cs" />
     <Compile Include="ApiHelper.cs" />
     <Compile Include="BatchDetail.cs" />
     <Compile Include="InStockModel.cs" />
     <Compile Include="InStockSearch.cs" />
     <Compile Include="Material.cs" />
+    <Compile Include="NewBuilder\NewApiHelper.cs" />
+    <Compile Include="NewBuilder\NewInStockSearch.cs" />
+    <Compile Include="NewBuilder\NewOutStockSearch.cs" />
+    <Compile Include="NewBuilder\NewSyncMaterial.cs" />
     <Compile Include="NewInStockModel.cs" />
     <Compile Include="NewInStockSearch.cs" />
     <Compile Include="NewMaterial.cs" />
