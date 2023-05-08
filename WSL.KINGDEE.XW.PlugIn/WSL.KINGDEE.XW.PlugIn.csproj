@@ -64,29 +64,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AccessTokenModel.cs" />
+    <Compile Include="Model\AccessTokenModel.cs" />
     <Compile Include="ApiHelper.cs" />
-    <Compile Include="BatchDetail.cs" />
-    <Compile Include="InStockModel.cs" />
+    <Compile Include="Model\BatchDetail.cs" />
+    <Compile Include="Model\InStockModel.cs" />
     <Compile Include="InStockSearch.cs" />
-    <Compile Include="Material.cs" />
+    <Compile Include="Model\Material.cs" />
     <Compile Include="NewBuilder\NewApiHelper.cs" />
     <Compile Include="NewBuilder\NewInStockSearch.cs" />
     <Compile Include="NewBuilder\NewOutStockSearch.cs" />
+    <Compile Include="NewBuilder\NewSyncCust.cs" />
     <Compile Include="NewBuilder\NewSyncMaterial.cs" />
-    <Compile Include="NewInStockModel.cs" />
+    <Compile Include="NewBuilder\NewSyncSupplier.cs" />
+    <Compile Include="Model\NewInStockModel.cs" />
+    <Compile Include="NewBuilder\NewSyncVendCust.cs" />
     <Compile Include="NewInStockSearch.cs" />
-    <Compile Include="NewMaterial.cs" />
-    <Compile Include="NewOutStockModel.cs" />
-    <Compile Include="NewResponse.cs" />
+    <Compile Include="Model\NewMaterial.cs" />
+    <Compile Include="Model\NewOutStockModel.cs" />
+    <Compile Include="Model\NewResponse.cs" />
     <Compile Include="NewOutStockSearch.cs" />
-    <Compile Include="OutStockModel.cs" />
+    <Compile Include="Model\OutStockModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PurInStockAudit.cs" />
-    <Compile Include="Receiver.cs" />
-    <Compile Include="ResponseData.cs" />
+    <Compile Include="Model\Receiver.cs" />
+    <Compile Include="Model\ResponseData.cs" />
     <Compile Include="SaleOutStockAudit.cs" />
-    <Compile Include="Supplier.cs" />
+    <Compile Include="Model\Supplier.cs" />
+    <Compile Include="VendCustModel.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

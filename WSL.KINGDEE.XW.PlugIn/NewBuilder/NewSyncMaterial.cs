@@ -1,5 +1,6 @@
 ﻿using Kingdee.BOS;
 using Kingdee.BOS.App.Data;
+using Kingdee.BOS.Contracts;
 using Kingdee.BOS.Orm.DataEntity;
 using Kingdee.BOS.ServiceHelper;
 using Kingdee.BOS.Util;
@@ -19,9 +20,22 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
     [HotUpdate]
     public class NewSyncMaterial
     {
-        public static void Sync(Context context, string token, DynamicObject materialObj)
+        public static void Sync(Context context,DynamicObject materialObj)
         {
-            NewApiHelper newApiHelper = new NewApiHelper("", "");
+            string orgId = materialObj["UseOrgId_Id"].ToString();
+
+            ISystemParameterService systemParameterService
+              = ServiceFactory.GetSystemParameterService(context);
+
+            object appIdValue = systemParameterService.GetParamter(context,
+                              Convert.ToInt64(orgId)
+                              , 0L, "KCY_StockParameter", "FNewAppID", 0L);
+
+            object appSecretValue = systemParameterService.GetParamter(context,
+                     Convert.ToInt64(orgId)
+                      , 0L, "KCY_StockParameter", "FNewAppSecret", 0L);
+
+            NewApiHelper newApiHelper = new NewApiHelper(appIdValue.ToString(), appSecretValue.ToString());
             NewMaterial material = new NewMaterial();
 
             #region 物料处理
@@ -106,12 +120,11 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
             try
             {
-                string enterpriseCode = "XWHQ913100006315557312";
                 string url = $@"https://spzs.scjgj.sh.gov.cn/p4/api/v1/products";
 
                 requestInfo = JsonConvert.SerializeObject(material);
 
-                responseInfo = newApiHelper.Post(url, requestInfo, token);
+                responseInfo = newApiHelper.Post(url, requestInfo);
                 if (string.IsNullOrWhiteSpace(responseInfo))
                 {
                     throw new Exception("接口返回的消息为空值");

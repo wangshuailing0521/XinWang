@@ -268,38 +268,35 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     DynamicObject org = entry["FOrgId"] as DynamicObject;
                     string orgId = org["Id"].ToString();
                     string url = "https://spzs.scjgj.sh.gov.cn/p4/api/v1/data/out";
-                    string token = newApiHelper.GetAccessToken();
-                    string enterpriseCode = "";
+                    string appId = "";
+                    string appSecret = "";
                     string sql = "";
                     requestInfo = "";
                     responseInfo = "";
                     status = "S";
                     message = "";
 
-                    #region 当组织上companyId为空时，不传递
+                    #region 当组织上appId为空时，不传递
 
                     ISystemParameterService systemParameterService
                       = ServiceFactory.GetSystemParameterService(this.Context);
 
                     object autoValue = systemParameterService.GetParamter(this.Context,
+                              Convert.ToInt64(orgId)
+                              , 0L, "KCY_StockParameter", "F_ora_CheckBox", 0L);
+
+                    object appIdValue = systemParameterService.GetParamter(this.Context,
+                              Convert.ToInt64(orgId)
+                              , 0L, "KCY_StockParameter", "FNewAppID", 0L);
+
+                    object appSecretValue = systemParameterService.GetParamter(this.Context,
                              Convert.ToInt64(orgId)
-                             , 0L, "KCY_StockParameter", "F_ora_CheckBox", 0L);
+                              , 0L, "KCY_StockParameter", "FNewAppSecret", 0L);
 
-                    object tokenValue = systemParameterService.GetParamter(this.Context,
-                             Convert.ToInt64(orgId)
-                              , 0L, "KCY_StockParameter", "F_ora_Text3", 0L);
+                    appId = appIdValue.ToString();
+                    appSecret = appSecretValue.ToString();
 
-                    object enterpriseCodeValue = systemParameterService.GetParamter(this.Context,
-                               Convert.ToInt64(orgId)
-                              , 0L, "KCY_StockParameter", "F_ora_Text4", 0L);
-
-                    token = tokenValue.ToString();
-                    enterpriseCode = enterpriseCodeValue.ToString();
-
-                    //token = "9016229|4a7472ab-c0d3-4a8a-81c1-a31eaa4ee433";
-                    //enterpriseCode = "91310000MA1FP4EB9H";
-
-                    if (string.IsNullOrWhiteSpace(enterpriseCode))
+                    if (string.IsNullOrWhiteSpace(appId))
                     {
                         continue;
                     }
@@ -308,17 +305,18 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
                     #region 物料处理，当物料未上传时，先上传物料
                     DynamicObject materialObj = entry["FMaterialID"] as DynamicObject;
-                    NewSyncMaterial.Sync(this.Context, token, materialObj);
+                    NewSyncMaterial.Sync(this.Context, materialObj);
                     #endregion
 
                     NewOutStockModel outStockModel = new NewOutStockModel();
 
-                    outStockModel.tagSn = entry["FBillNo"].ToString() + "-" + entry["FEntryID"].ToString();
-                    outStockModel.tagSnProducerCode = enterpriseCode;
-                    outStockModel.enterpriseCode = enterpriseCode;
+                    //outStockModel.tagSn = entry["FBillNo"].ToString() + "-" + entry["FEntryID"].ToString();
+                    //outStockModel.tagSnProducerCode = enterpriseCode;
+                    //outStockModel.enterpriseCode = enterpriseCode;
 
                     outStockModel.dataDate = Convert.ToDateTime(entry["FDate"]).ToString("yyyy-MM-dd");
                     outStockModel.productCode = materialObj["Number"].ToString();
+                    outStockModel.productName = materialObj["Name"].ToString();
 
                     #region 生产信息处理
                     ProductionModel production = new ProductionModel();
@@ -348,7 +346,11 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     #endregion
 
                     #region 产地
-                    string cdName = "中国";
+                    string cdName = entry["FCountry"].ToString();
+                    production.country = entry["FCountry"].ToString();
+                    production.province = entry["FProvince"].ToString();
+                    production.city = entry["FCity"].ToString();
+
                     DynamicObject cd = entry["FCD"] as DynamicObject;
                     if (cd != null)
                     {
@@ -395,6 +397,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
                     #region 客户
                     DynamicObject customerObj = entry["FCustomer"] as DynamicObject;
+                    sales.customerSocialCreditCode = customerObj["SOCIALCRECODE"].ToString();
                     sales.customerName = customerObj["Name"].ToString();
                     sales.customerAddr = customerObj["ADDRESS"].ToString();
 
@@ -411,7 +414,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     #region 调用接口
                     requestInfo = JsonConvert.SerializeObject(outStockModel);
 
-                    responseInfo = newApiHelper.Post(url, requestInfo, token);
+                    responseInfo = newApiHelper.Post(url, requestInfo);
                     if (string.IsNullOrWhiteSpace(responseInfo))
                     {
                         throw new Exception("接口返回的消息为空值");

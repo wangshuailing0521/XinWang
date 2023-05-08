@@ -114,7 +114,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,'CG' FType
                        ,A.FDate
                        ,B.FMaterialId
-                       ,B.FRealQty
+                       ,B.F_ora_SYJ FRealQty
                        ,ISNULL(B.F_ora_Assistantxw,'') FSCCJ
                        ,B.FProduceDate
                        ,A.FSupplierID
@@ -128,7 +128,10 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,ISNULL(B.F_ora_Comboxw2,'2')F_ora_Comboxw2
                        ,A.FPurchaseOrgId FOrgId
                        ,I.FExpPeriod
-                       ,B.FUnitId
+                       ,B.F_ora_SYJ1 FUnitId
+                       ,ISNULL(F1.FDataValue,'') FCountry
+                       ,ISNULL(F2.FDataValue,'') FProvince
+                       ,ISNULL(F3.FDataValue,'') FCity
                   FROM  t_STK_InStock A
                         INNER JOIN T_STK_INSTOCKENTRY B
                         ON A.FID = B.FID
@@ -144,6 +147,12 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                         ON B.F_ora_cd = F.FENTRYID AND F.FLocaleID = 2052
                         INNER JOIN T_BD_MaterialStock I
                         ON B.FMaterialId = I.FMaterialId
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F1
+                        ON B.F_ora_XW1 = F1.FENTRYID AND F1.FLocaleID = 2052
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F2
+                        ON B.F_ora_XW2 = F2.FENTRYID AND F2.FLocaleID = 2052
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F3
+                        ON B.F_ora_XW3 = F3.FENTRYID AND F3.FLocaleID = 2052
                  WHERE  A.FDOCUMENTSTATUS = 'C'
                    AND  A.FDate >= '{beginDate}'
                    AND  A.FDate < '{endDate}'
@@ -211,6 +220,10 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                 newRow["FOrgId_Id"] = Convert.ToInt32(item["FOrgId"]);
                 newRow["FBillNo"] = item["FBillNo"].ToString();
                 newRow["FPeriodDate"] = Convert.ToInt32(item["FExpPeriod"]);
+
+                newRow["FCountry"] = item["FCountry"].ToString();
+                newRow["FProvince"] = item["FProvince"].ToString();
+                newRow["FCity"] = item["FCity"].ToString();
 
                 #region 获取供应商证件
                 sql = $@"
@@ -292,6 +305,10 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,A.FStockOrgId FOrgId
                        ,I.FExpPeriod
                        ,B.FUnitId
+
+                       ,ISNULL(F1.FDataValue,'') FCountry
+                       ,ISNULL(F2.FDataValue,'') FProvince
+                       ,ISNULL(F3.FDataValue,'') FCity
                   FROM  T_SCMS_ALLOTRECEIPT A
                         INNER JOIN T_SCMS_ALLOTRECEIPTENTRY B
                         ON A.FID = B.FID
@@ -307,6 +324,13 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                         ON B.F_ora_cd1 = F.FENTRYID AND F.FLocaleID = 2052
                         INNER JOIN T_BD_MaterialStock I
                         ON B.FMaterialId = I.FMaterialId
+
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F1
+                        ON B.F_ora_XW1 = F1.FENTRYID AND F1.FLocaleID = 2052
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F2
+                        ON B.F_ora_XW2 = F2.FENTRYID AND F2.FLocaleID = 2052
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F3
+                        ON B.F_ora_XW3 = F3.FENTRYID AND F3.FLocaleID = 2052
                  WHERE  A.FDOCUMENTSTATUS = 'C'
                    AND  A.FDate >= '{beginDate}'
                    AND  A.FDate < '{endDate}'
@@ -379,6 +403,10 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                 newRow["FOrgId_Id"] = Convert.ToInt32(item["FOrgId"]);
                 newRow["FBillNo"] = item["FBillNo"].ToString();
                 newRow["FPeriodDate"] = Convert.ToInt32(item["FExpPeriod"]);
+
+                newRow["FCountry"] = item["FCountry"].ToString();
+                newRow["FProvince"] = item["FProvince"].ToString();
+                newRow["FCity"] = item["FCity"].ToString();
 
                 #region 获取供应商证件
                 sql = $@"
@@ -491,15 +519,15 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     DynamicObject org = entry["FOrgId"] as DynamicObject;
                     string orgId = org["Id"].ToString();
                     string url = "https://spzs.scjgj.sh.gov.cn/p4/api/v1/data/in";
-                    string token = newApiHelper.GetAccessToken();
-                    string enterpriseCode = "";
+                    string appId = "";
+                    string appSecret = "";
                     string sql = "";
                     requestInfo = "";
                     responseInfo = "";
                     status = "S";
                     message = "";
 
-                    #region 当组织上companyId为空时，不传递
+                    #region 当组织上appId为空时，不传递
 
                     ISystemParameterService systemParameterService
                       = ServiceFactory.GetSystemParameterService(this.Context);
@@ -508,21 +536,18 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                               Convert.ToInt64(orgId)
                               , 0L, "KCY_StockParameter", "F_ora_CheckBox", 0L);
 
-                    object tokenValue = systemParameterService.GetParamter(this.Context,
+                    object appIdValue = systemParameterService.GetParamter(this.Context,
+                              Convert.ToInt64(orgId)
+                              , 0L, "KCY_StockParameter", "FNewAppID", 0L);
+
+                    object appSecretValue = systemParameterService.GetParamter(this.Context,
                              Convert.ToInt64(orgId)
-                              , 0L, "KCY_StockParameter", "F_ora_Text3", 0L);
+                              , 0L, "KCY_StockParameter", "FNewAppSecret", 0L);
 
-                    object enterpriseCodeValue = systemParameterService.GetParamter(this.Context,
-                               Convert.ToInt64(orgId)
-                              , 0L, "KCY_StockParameter", "F_ora_Text4", 0L);
+                    appId = appIdValue.ToString();
+                    appSecret = appSecretValue.ToString();
 
-                    token = tokenValue.ToString();
-                    enterpriseCode = enterpriseCodeValue.ToString();
-
-                    //token = "9016229|4a7472ab-c0d3-4a8a-81c1-a31eaa4ee433";
-                    //enterpriseCode = "91310000MA1FP4EB9H";
-
-                    if (string.IsNullOrWhiteSpace(enterpriseCode))
+                    if (string.IsNullOrWhiteSpace(appId))
                     {
                         continue;
                     }
@@ -531,18 +556,19 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
                     #region 物料处理，当物料未上传时，先上传物料
                     DynamicObject materialObj = entry["FMaterialID"] as DynamicObject;
-                    NewSyncMaterial.Sync(this.Context, token, materialObj);
+                    NewSyncMaterial.Sync(this.Context, materialObj);
                     #endregion
 
                     NewInStockModel inStockModel = new NewInStockModel();
 
-                    inStockModel.tagSn = entry["FBillNo"].ToString() + "-" + entry["FEntryID"].ToString();
-                    inStockModel.tagSnProducerCode = enterpriseCode;
-                    inStockModel.enterpriseCode = enterpriseCode;
+                    //inStockModel.tagSn = entry["FBillNo"].ToString() + "-" + entry["FEntryID"].ToString();
+                    //inStockModel.tagSnProducerCode = enterpriseCode;
+                    //inStockModel.enterpriseCode = enterpriseCode;
 
 
                     inStockModel.dataDate = Convert.ToDateTime(entry["FDate"]).ToString("yyyy-MM-dd");
                     inStockModel.productCode = materialObj["Number"].ToString();
+                    inStockModel.productName = materialObj["Name"].ToString();
 
 
                     #region 生产信息处理
@@ -573,7 +599,11 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     #endregion
 
                     #region 产地
-                    string cdName = "中国";
+                    string cdName = entry["FCountry"].ToString();
+                    production.country = entry["FCountry"].ToString();
+                    production.province = entry["FProvince"].ToString();
+                    production.city = entry["FCity"].ToString();
+
                     DynamicObject cd = entry["FCD"] as DynamicObject;
                     if (cd != null)
                     {
@@ -591,7 +621,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     }
                     if (entry["FJYNumber"] != null)
                     {
-                        production.certNoOfQuarantine = entry["FJYNumber"].ToString();
+                        production.iqCertNo = entry["FJYNumber"].ToString();
                     }
                     #endregion
 
@@ -624,6 +654,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
                     DynamicObjectCollection supplierBase = supplierObj["SupplierBase"] as DynamicObjectCollection;
                     purchase.vendorAddr = supplierBase[0]["RegisterAddress"].ToString();
+                    purchase.vendorSocialCreditCode = supplierBase[0]["SOCIALCRECODE"].ToString();
 
                     if (entry["FPhone"] != null)
                     {
@@ -638,7 +669,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     #region 调用接口
                     requestInfo = JsonConvert.SerializeObject(inStockModel);
 
-                    responseInfo = newApiHelper.Post(url, requestInfo, token);
+                    responseInfo = newApiHelper.Post(url, requestInfo);
                     if (string.IsNullOrWhiteSpace(responseInfo))
                     {
                         throw new Exception("接口返回的消息为空值");
