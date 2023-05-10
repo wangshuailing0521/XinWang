@@ -23,7 +23,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
     [HotUpdate]
     public class NewOutStockSearch : AbstractDynamicFormPlugIn
     {
-        NewApiHelper newApiHelper = new NewApiHelper("", "");
+        NewApiHelper newApiHelper = null;
 
         public override void AfterButtonClick(AfterButtonClickEventArgs e)
         {
@@ -113,7 +113,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,'PS' FType
                        ,A.FDate
                        ,B.FMaterialId
-                       ,B.FRealQty
+                       ,B.F_ora_SYJ FRealQty
                        ,B.FProduceDate
                        ,A.FCustomerID
                        ,ISNULL(B.FLot,0)FLot
@@ -122,7 +122,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,A.FApproveDate
                        ,A.FSaleOrgId FOrgId
                        ,I.FExpPeriod
-                       ,B.FUnitId
+                       ,B.F_ora_SYJ1 FUnitId
                        ,ISNULL(E.FDATAVALUE,'') FSCCJ
                        ,ISNULL(D.F_XW_SCCJ,'') FSCCJID
                        ,ISNULL(B.F_ora_xw6,'') FCD
@@ -130,6 +130,9 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,K.FTEL
                        ,B.F_ora_XW7 FZJBM
                        ,ISNULL(B.F_ora_Comboxw5,'2')F_ora_Comboxw5
+                       ,ISNULL(F1.FDataValue,'') FCountry
+                       ,ISNULL(F2.FDataValue,'') FProvince
+                       ,ISNULL(F3.FDataValue,'') FCity
                   FROM  T_SAL_OUTSTOCK A
                         INNER JOIN T_SAL_OUTSTOCKENTRY B
                         ON A.FID = B.FID
@@ -149,6 +152,12 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                         ON K.FCUSTID = A.FCUSTOMERID
                         LEFT JOIN T_BAS_ASSISTANTDATAENTRY M
                         ON B.F_ora_xw6 = E.FENTRYID 
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F1
+                        ON B.F_ora_XW1 = F1.FENTRYID AND F1.FLocaleID = 2052
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F2
+                        ON B.F_ora_XW2 = F2.FENTRYID AND F2.FLocaleID = 2052
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F3
+                        ON B.F_ora_XW3 = F3.FENTRYID AND F3.FLocaleID = 2052
                  WHERE  A.FDOCUMENTSTATUS = 'C'
                    AND  A.FDate >= '{beginDate}'
                    AND  A.FDate < '{endDate}'
@@ -315,7 +324,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     //outStockModel.enterpriseCode = enterpriseCode;
 
                     outStockModel.dataDate = Convert.ToDateTime(entry["FDate"]).ToString("yyyy-MM-dd");
-                    outStockModel.productCode = materialObj["Number"].ToString();
+                    outStockModel.productCode = materialObj["Number"].ToString().Replace(".", ""); ;
                     outStockModel.productName = materialObj["Name"].ToString();
 
                     #region 生产信息处理
@@ -406,6 +415,18 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                         sales.customerTel = entry["FPhone"].ToString();
                     }
 
+                    VendCustModel vendCustModel = new VendCustModel
+                    {
+                        type = "Cust",
+                        id = customerObj["Id"].ToString(),
+                        code = customerObj["Number"].ToString(),
+                        name = sales.customerName,
+                        tel = sales.customerTel,
+                        address = sales.customerAddr,
+                        socialCreditCode = sales.customerSocialCreditCode
+                    };
+                    NewSyncVendCust.Sync(this.Context, appId, appSecret, vendCustModel);
+
                     #endregion
 
                     outStockModel.sales = sales;
@@ -444,7 +465,11 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     {
                         //失败
                         status = "E";
-                        message = responseData.errorMsg;
+                        List<ResponseError> responseErrors = responseData.errors;
+                        if (responseErrors != null)
+                        {
+                            message = string.Join(",", responseErrors.Select(x => x.message));
+                        }
                         throw new KDException("错误", "上传数据失败：" + message);
                     }
 

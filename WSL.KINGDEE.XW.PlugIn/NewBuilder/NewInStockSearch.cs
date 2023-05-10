@@ -24,7 +24,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
     [HotUpdate]
     public class NewInStockSearch : AbstractDynamicFormPlugIn
     {
-        NewApiHelper newApiHelper = new NewApiHelper("", "");
+        NewApiHelper newApiHelper = null;
 
         public override void AfterButtonClick(AfterButtonClickEventArgs e)
         {
@@ -290,7 +290,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,'MD' FType
                        ,A.FDate
                        ,B.FMaterialId
-                       ,B.FRealQty
+                       ,B.F_ora_SYJ FRealQty
                        ,ISNULL(B.F_ora_sccj1,'') FSCCJ
                        ,B.FProduceDate
                        ,B.FDETAILSUPPLIERID FSupplierId
@@ -304,7 +304,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,B.F_ora_bs1 F_ora_Comboxw2
                        ,A.FStockOrgId FOrgId
                        ,I.FExpPeriod
-                       ,B.FUnitId
+                       ,B.F_ora_SYJ1 FUnitId
 
                        ,ISNULL(F1.FDataValue,'') FCountry
                        ,ISNULL(F2.FDataValue,'') FProvince
@@ -480,8 +480,6 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
         void Sync()
         {
-            newApiHelper = new NewApiHelper("", "");
-
             DynamicObject billObj = this.Model.DataObject;
 
             DynamicObjectCollection Entrys
@@ -551,25 +549,23 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     {
                         continue;
                     }
-                    #endregion
 
+                    #endregion
 
                     #region 物料处理，当物料未上传时，先上传物料
                     DynamicObject materialObj = entry["FMaterialID"] as DynamicObject;
                     NewSyncMaterial.Sync(this.Context, materialObj);
                     #endregion
 
+                    #region 证明文件处理
+
+                    #endregion
+
                     NewInStockModel inStockModel = new NewInStockModel();
 
-                    //inStockModel.tagSn = entry["FBillNo"].ToString() + "-" + entry["FEntryID"].ToString();
-                    //inStockModel.tagSnProducerCode = enterpriseCode;
-                    //inStockModel.enterpriseCode = enterpriseCode;
-
-
                     inStockModel.dataDate = Convert.ToDateTime(entry["FDate"]).ToString("yyyy-MM-dd");
-                    inStockModel.productCode = materialObj["Number"].ToString();
+                    inStockModel.productCode = materialObj["Number"].ToString().Replace(".", ""); ;
                     inStockModel.productName = materialObj["Name"].ToString();
-
 
                     #region 生产信息处理
                     ProductionModel production = new ProductionModel();
@@ -661,6 +657,18 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                         purchase.vendorTel = entry["FPhone"].ToString();
                     }
 
+                    VendCustModel vendCustModel = new VendCustModel
+                    {
+                        type = "Supplier",
+                        id = supplierObj["Id"].ToString(),
+                        code = supplierObj["Number"].ToString(),
+                        name = purchase.vendorName,
+                        tel = purchase.vendorTel,
+                        address = purchase.vendorAddr,
+                        socialCreditCode = purchase.vendorSocialCreditCode
+                    };
+                    NewSyncVendCust.Sync(this.Context, appId, appSecret, vendCustModel);
+
                     #endregion
 
                     inStockModel.purchase = purchase;
@@ -669,6 +677,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     #region 调用接口
                     requestInfo = JsonConvert.SerializeObject(inStockModel);
 
+                    newApiHelper = new NewApiHelper(appId, appSecret);
                     responseInfo = newApiHelper.Post(url, requestInfo);
                     if (string.IsNullOrWhiteSpace(responseInfo))
                     {
@@ -704,7 +713,11 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     {
                         //失败
                         status = "E";
-                        message = responseData.errorMsg;
+                        List<ResponseError> responseErrors = responseData.errors;
+                        if (responseErrors != null)
+                        {
+                            message = string.Join(",", responseErrors.Select(x => x.message));
+                        }
                         throw new KDException("错误", "上传数据失败：" + message);
                     }
 

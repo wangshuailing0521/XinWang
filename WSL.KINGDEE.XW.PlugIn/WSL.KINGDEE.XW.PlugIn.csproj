@@ -70,12 +70,12 @@
     <Compile Include="Model\InStockModel.cs" />
     <Compile Include="InStockSearch.cs" />
     <Compile Include="Model\Material.cs" />
+    <Compile Include="Model\NewFile.cs" />
     <Compile Include="NewBuilder\NewApiHelper.cs" />
     <Compile Include="NewBuilder\NewInStockSearch.cs" />
     <Compile Include="NewBuilder\NewOutStockSearch.cs" />
-    <Compile Include="NewBuilder\NewSyncCust.cs" />
+    <Compile Include="NewBuilder\NewSyncFile.cs" />
     <Compile Include="NewBuilder\NewSyncMaterial.cs" />
-    <Compile Include="NewBuilder\NewSyncSupplier.cs" />
     <Compile Include="Model\NewInStockModel.cs" />
     <Compile Include="NewBuilder\NewSyncVendCust.cs" />
     <Compile Include="NewInStockSearch.cs" />

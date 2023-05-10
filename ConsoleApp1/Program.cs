@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,11 +32,20 @@ namespace ConsoleApp1
             #endregion
         }
 
+        
+
         static void SyncProduct()
         {
             NewApiHelper newApiHelper 
                 = new NewApiHelper("shfda-e029132d-8172-4d8f-bcd8-fb247f51cc89", "e2391054-0618-41be-955a-e3d07332eddb");
 
+            string url = url = $@"https://spzs.scjgj.sh.gov.cn/p4/api/v1/vendorcustomer/customer";
+            string supplier = @"{""type"":""Supplier"",""id"":""3854465"",""code"":""1150100000001"",""name"":""上海金文食品有限公司"",""tel"":""15001735615"",""address"":""上海市黄浦区陆家浜路1332号21层B室"",""socialCreditCode"":""91310101771454510Y""}";
+
+            string errors = @"{""errors"":[{""code"":""validation.production.province"",""message"":""省市级联错误""},{""code"":""validation.production.city"",""message"":""省市级联错误""}]}";
+
+            var ss = JsonConvert.DeserializeObject<NewResponse>(errors);
+            string responseInfo = newApiHelper.Post(url, supplier);
         }
     }
 }

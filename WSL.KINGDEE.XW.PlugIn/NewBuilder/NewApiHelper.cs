@@ -15,7 +15,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
     {
         private string _appId = "";
         private string _appSecret = "";
-        private string _token = "";
+        public string _token = "";
 
         public NewApiHelper(string appId, string appSecret)
         {
@@ -103,8 +103,9 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                 request = HttpWebRequest.Create(url) as HttpWebRequest;
             }
 
+            request.Headers["Authorization"] = "Bearer " + _token;
             request.Method = "Post";//请求方式
-            request.Headers.Add("Authorization","Bearer"+ _token);
+            //request.Headers.Add("Authorization","Bearer"+ _token);
             request.KeepAlive = true;
             request.ContentType = "application/json";//请求头参数
             byte[] bytes = Encoding.UTF8.GetBytes(para);//设置请求参数

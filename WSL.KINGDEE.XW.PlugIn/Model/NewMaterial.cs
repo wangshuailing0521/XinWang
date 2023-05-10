@@ -38,5 +38,16 @@ namespace WSL.KINGDEE.XW.PlugIn
         public string certNo { get; set; }
 
         public string certPictureBin { get; set; }
+
+        #region New
+
+        public string field { get; set; }
+
+        public string storageCondition { get; set; }
+
+        public string guaranteeNum { get; set; }
+
+        public string guaranteeUnit { get; set; }
+        #endregion
     }
 }

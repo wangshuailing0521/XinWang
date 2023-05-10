@@ -66,6 +66,8 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,F.FExpPeriod
                        ,H.FNumber FGroup
                        ,ISNULL(G.FBARCODE,'')FBARCODE
+                       ,ISNULL(F1.FDATAVALUE,'')FCCTJ --存储条件
+                       ,ISNULL(F2.FNumber,'0')FField --产品类型
                   FROM  T_BD_MATERIAL A
                         INNER JOIN T_BD_MATERIAL_L B
                         ON A.FMaterialID = B.FMaterialID AND B.FLOCALEID = 2052
@@ -83,28 +85,36 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                         ON D.F_ora_cd = I.FENTRYID
                         LEFT JOIN T_BAS_PREBDONE K
                         ON K.FID = A.F_ora_BaseXW9
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY_L F1
+                        ON A.F_ora_Assistantxw13 = F1.FENTRYID AND F1.FLOCALEID = 2052
+                        LEFT JOIN T_BAS_ASSISTANTDATAENTRY F2
+                        ON A.F_ora_XW2305 = F2.FENTRYID 
                  WHERE  A.FMaterialId = {materialId} 
                 ";
             DynamicObjectCollection materialDatas
                 = DBUtils.ExecuteDynamicObject(context, sql);
 
-
-            material.code = materialObj["Number"].ToString();
+            material.field = materialDatas[0]["FField"].ToString();
+            material.code = materialObj["Number"].ToString().Replace(".","");
             material.name = materialObj["Name"].ToString();
             material.standard = materialObj["Specification"].ToString();
             material.barcode = materialDatas[0]["FBARCODE"].ToString();
             material.producerName = materialDatas[0]["FSCCJ"].ToString();
             material.category = materialDatas[0]["FGroup"].ToString();
+            material.storageCondition = materialDatas[0]["FCCTJ"].ToString();
 
             string expUnit = materialDatas[0]["FExpUnit"].ToString();
-            material.guaranteeDays = materialDatas[0]["FExpPeriod"].ToString();
+            material.guaranteeUnit = "天";
+            material.guaranteeNum = materialDatas[0]["FExpPeriod"].ToString();
             if (expUnit == "M")
             {
-                material.guaranteeDays = (Convert.ToInt32(materialDatas[0]["FExpPeriod"]) * 30).ToString();
+                material.guaranteeUnit = "月";
+                //material.guaranteeNum = (Convert.ToInt32(materialDatas[0]["FExpPeriod"]) * 30).ToString();
             }
             if (expUnit == "Y")
             {
-                material.guaranteeDays = (Convert.ToInt32(materialDatas[0]["FExpPeriod"]) * 365).ToString();
+                material.guaranteeUnit = "年";
+                //material.guaranteeNum = (Convert.ToInt32(materialDatas[0]["FExpPeriod"]) * 365).ToString();
             }
 
 
@@ -147,7 +157,11 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                 }
                 else
                 {
-                    message = responseData.errorMsg;
+                    List<ResponseError> responseErrors = responseData.errors;
+                    if (responseErrors != null)
+                    {
+                        message = string.Join(",", responseErrors.Select(x => x.message));
+                    }
                     throw new KDException("错误", $@"上传物料{materialObj["Name"]}失败：{message}");
                 }
             }
