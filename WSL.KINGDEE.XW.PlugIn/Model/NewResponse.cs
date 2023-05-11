@@ -19,6 +19,8 @@ namespace WSL.KINGDEE.XW.PlugIn
 
         public string errorMsg { get; set; }
 
+        public string content { get; set; }
+
         public List<ResponseError> errors { get; set; }
     }
 

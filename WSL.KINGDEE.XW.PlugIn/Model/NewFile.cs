@@ -22,7 +22,7 @@ namespace WSL.KINGDEE.XW.PlugIn.Model
         /// <summary>
         /// 证明文件地址；base64 编码的 jpg/png/gif 格式的图片，单个图片最大 1024KB。
         /// </summary>
-        public string certUrls { get; set; }
+        public List<string> certUrls { get; set; }
         public string description { get; set; }
     }
 }

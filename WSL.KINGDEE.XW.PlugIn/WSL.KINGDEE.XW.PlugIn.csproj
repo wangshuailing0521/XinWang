@@ -46,6 +46,14 @@
     <Reference Include="Kingdee.BOS.DataEntity">
       <HintPath>..\..\..\..\..\Program Files (x86)\Kingdee\K3Cloud\WebSite\bin\Kingdee.BOS.DataEntity.dll</HintPath>
     </Reference>
+    <Reference Include="Kingdee.BOS.FileServer.Core, Version=7.6.2003.9, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Kingdee\K3Cloud\WebSite\bin\Kingdee.BOS.FileServer.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Kingdee.BOS.FileServer.ProxyService, Version=7.6.2003.9, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Kingdee\K3Cloud\WebSite\bin\Kingdee.BOS.FileServer.ProxyService.dll</HintPath>
+    </Reference>
     <Reference Include="Kingdee.BOS.ServiceHelper">
       <HintPath>..\..\..\..\..\Program Files (x86)\Kingdee\K3Cloud\WebSite\bin\Kingdee.BOS.ServiceHelper.dll</HintPath>
     </Reference>

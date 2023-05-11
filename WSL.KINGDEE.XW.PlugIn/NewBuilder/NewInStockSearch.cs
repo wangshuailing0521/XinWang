@@ -17,6 +17,11 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Transactions;
+using Kingdee.BOS.FileServer.Core.Object;
+using Kingdee.BOS.FileServer.ProxyService;
+using WSL.KINGDEE.XW.PlugIn.Model;
+using Kingdee.BOS.Log;
+using Kingdee.BOS.Core.DynamicForm;
 
 namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 {
@@ -132,6 +137,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,ISNULL(F1.FDataValue,'') FCountry
                        ,ISNULL(F2.FDataValue,'') FProvince
                        ,ISNULL(F3.FDataValue,'') FCity
+                       ,B.F_QRAU_XW0510 FFieldID
                   FROM  t_STK_InStock A
                         INNER JOIN T_STK_INSTOCKENTRY B
                         ON A.FID = B.FID
@@ -224,6 +230,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                 newRow["FCountry"] = item["FCountry"].ToString();
                 newRow["FProvince"] = item["FProvince"].ToString();
                 newRow["FCity"] = item["FCity"].ToString();
+                newRow["FFieldID_Id"] = Convert.ToInt32(item["FFieldID"]);
 
                 #region 获取供应商证件
                 sql = $@"
@@ -309,6 +316,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,ISNULL(F1.FDataValue,'') FCountry
                        ,ISNULL(F2.FDataValue,'') FProvince
                        ,ISNULL(F3.FDataValue,'') FCity
+                       ,B.FFieldID
                   FROM  T_SCMS_ALLOTRECEIPT A
                         INNER JOIN T_SCMS_ALLOTRECEIPTENTRY B
                         ON A.FID = B.FID
@@ -407,6 +415,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                 newRow["FCountry"] = item["FCountry"].ToString();
                 newRow["FProvince"] = item["FProvince"].ToString();
                 newRow["FCity"] = item["FCity"].ToString();
+                newRow["FFieldID_Id"] = Convert.ToInt32(item["FFieldID"]);
 
                 #region 获取供应商证件
                 sql = $@"
@@ -492,6 +501,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                 sb.AppendLine("未选中任何数据!");
             }
 
+            IOperationResult opResult = new OperationResult();
             int i = 0;
             foreach (DynamicObject entry in Entrys)
             {
@@ -558,7 +568,47 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     #endregion
 
                     #region 证明文件处理
+                    DynamicObject file = entry["FFieldID"] as DynamicObject;
+                    NewFile newFile = new NewFile();
+                    if (file != null)
+                    {
+                        newFile = new NewFile
+                        {
+                            certNo = file["Number"].ToString(),
+                            certType = "certNoOfQuarantine"
+                        };
 
+                        if (string.IsNullOrWhiteSpace(file["FInterfaceID"].ToString()))
+                        {
+
+                            if (file["F_QRAU_XW"] != null)
+                            {
+                                //string field = file["F_QRAU_XW"].ToString();
+                                //TFileInfo tFile = new TFileInfo() { FileId = field, CTX = this.Context };
+                                //var fileService = new UpDownloadService();
+                                //var fileData = fileService.GetFileData(tFile);
+                                //string certUrls = $@"[""data:image/jpeg;base64,{Convert.ToBase64String(fileData)}""]";
+                            }
+
+                            if (file["F_QRAU_XW2"] != null)
+                            {
+                                byte[] pictureByte = (byte[])file["F_QRAU_XW2"];
+                                string pictureBase64 = $@"data:image/jpeg;base64,{Convert.ToBase64String(pictureByte)}";
+                                List<string> pictures = new List<string>() { pictureBase64 };
+                                string certUrls = JsonConvert.SerializeObject(pictures);
+
+                                newFile = new NewFile
+                                {
+                                    certNo = file["Number"].ToString(),
+                                    certType = "certNoOfQuarantine",
+                                    certUrls = pictures
+                                };
+
+                                NewSyncFile.Sync(this.Context, appId, appSecret, newFile);
+
+                            }
+                        }
+                    }
                     #endregion
 
                     NewInStockModel inStockModel = new NewInStockModel();
@@ -608,17 +658,18 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     #endregion
 
                     #region 检验检疫证书
-                    if (!cdName.Contains("中国"))
-                    {
-                        if (entry["FJYNumber"] == null || string.IsNullOrWhiteSpace(entry["FJYNumber"].ToString()))
-                        {
-                            throw new KDException("错误", "产地为外国时，检验检疫证书不能为空");
-                        }
-                    }
-                    if (entry["FJYNumber"] != null)
-                    {
-                        production.iqCertNo = entry["FJYNumber"].ToString();
-                    }
+                    production.iqCertNo = newFile.certNo; 
+                    //if (!cdName.Contains("中国"))
+                    //{
+                    //    if (entry["FJYNumber"] == null || string.IsNullOrWhiteSpace(entry["FJYNumber"].ToString()))
+                    //    {
+                    //        throw new KDException("错误", "产地为外国时，检验检疫证书不能为空");
+                    //    }
+                    //}
+                    //if (entry["FJYNumber"] != null)
+                    //{
+                    //    production.iqCertNo = newFile.certNo;
+                    //}
                     #endregion
 
                     inStockModel.production = production;
@@ -708,6 +759,12 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                             DBUtils.Execute(this.Context, sql);
                         }
 
+                        opResult.OperateResult.Add(new OperateResult()
+                        {
+                            Name = billNo,
+                            Message = "成功",
+                            SuccessStatus = true
+                        });
                     }
                     else
                     {
@@ -730,6 +787,13 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     status = "E";
                     message = ex.Message.Replace("'", "''");
                     sb.AppendLine($@"第{i}条：{ex.Message},{ex.StackTrace}");
+
+                    opResult.OperateResult.Add(new OperateResult()
+                    {
+                        Name = billNo,
+                        Message = ex.Message,
+                        SuccessStatus = false
+                    });
                 }
                 finally
                 {
@@ -753,18 +817,23 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
                         kDTransactionScope.Complete();
                     }
+
+                    Logger.Info("", "请求信息:" + requestInfo);
+                    Logger.Info("", "返回信息:" + responseInfo);
                 }
 
             }
 
-            if (!string.IsNullOrWhiteSpace(sb.ToString()))
-            {
-                this.View.ShowNotificationMessage(sb.ToString());
-            }
-            else
-            {
-                this.View.ShowMessage("上传成功");
-            }
+            this.View.ShowOperateResult(opResult.OperateResult);
+
+            //if (!string.IsNullOrWhiteSpace(sb.ToString()))
+            //{
+            //    this.View.ShowNotificationMessage(sb.ToString());
+            //}
+            //else
+            //{
+            //    this.View.ShowMessage("上传成功");
+            //}
         }
 
      

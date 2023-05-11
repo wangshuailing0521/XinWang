@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Kingdee.BOS.Log;
+
+using Newtonsoft.Json;
 
 using System;
 using System.Collections.Generic;

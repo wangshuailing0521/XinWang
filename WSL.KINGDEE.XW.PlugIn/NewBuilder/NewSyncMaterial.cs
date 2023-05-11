@@ -98,14 +98,19 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
             material.code = materialObj["Number"].ToString().Replace(".","");
             material.name = materialObj["Name"].ToString();
             material.standard = materialObj["Specification"].ToString();
-            material.barcode = materialDatas[0]["FBARCODE"].ToString();
+            if (!string.IsNullOrWhiteSpace(materialDatas[0]["FBARCODE"].ToString()))
+            {
+                material.barcode = materialDatas[0]["FBARCODE"].ToString();
+            }
+            
             material.producerName = materialDatas[0]["FSCCJ"].ToString();
             material.category = materialDatas[0]["FGroup"].ToString();
             material.storageCondition = materialDatas[0]["FCCTJ"].ToString();
 
             string expUnit = materialDatas[0]["FExpUnit"].ToString();
             material.guaranteeUnit = "天";
-            material.guaranteeNum = materialDatas[0]["FExpPeriod"].ToString();
+            decimal num = Convert.ToDecimal(materialDatas[0]["FExpPeriod"].ToString());
+            material.guaranteeNum = Math.Round(num, 0).ToString();
             if (expUnit == "M")
             {
                 material.guaranteeUnit = "月";
