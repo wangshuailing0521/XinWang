@@ -37,11 +37,15 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
             if (e.Key.ToUpper() == "FSEARCH")
             {
+                CheckDevelopPeriod.Check(this.Context);
+
                 SetData();
             }
 
             if (e.Key.ToUpper() == "FSYNCUP")
             {
+                CheckDevelopPeriod.Check(this.Context);
+
                 Sync();
                 SetData();
             }
@@ -583,16 +587,10 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
                             if (file["F_QRAU_XW"] != null)
                             {
-                                //string field = file["F_QRAU_XW"].ToString();
-                                //TFileInfo tFile = new TFileInfo() { FileId = field, CTX = this.Context };
-                                //var fileService = new UpDownloadService();
-                                //var fileData = fileService.GetFileData(tFile);
-                                //string certUrls = $@"[""data:image/jpeg;base64,{Convert.ToBase64String(fileData)}""]";
-                            }
-
-                            if (file["F_QRAU_XW2"] != null)
-                            {
-                                byte[] pictureByte = (byte[])file["F_QRAU_XW2"];
+                                string field = file["F_QRAU_XW"].ToString();
+                                TFileInfo tFile = new TFileInfo() { FileId = field, CTX = this.Context };
+                                var fileService = new UpDownloadService();
+                                var pictureByte = fileService.GetFileData(tFile);
                                 string pictureBase64 = $@"data:image/jpeg;base64,{Convert.ToBase64String(pictureByte)}";
                                 List<string> pictures = new List<string>() { pictureBase64 };
                                 string certUrls = JsonConvert.SerializeObject(pictures);
@@ -605,8 +603,25 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                                 };
 
                                 NewSyncFile.Sync(this.Context, appId, appSecret, newFile);
-
                             }
+
+                            //if (file["F_QRAU_XW2"] != null)
+                            //{
+                            //    byte[] pictureByte = (byte[])file["F_QRAU_XW2"];
+                            //    string pictureBase64 = $@"data:image/jpeg;base64,{Convert.ToBase64String(pictureByte)}";
+                            //    List<string> pictures = new List<string>() { pictureBase64 };
+                            //    string certUrls = JsonConvert.SerializeObject(pictures);
+
+                            //    newFile = new NewFile
+                            //    {
+                            //        certNo = file["Number"].ToString(),
+                            //        certType = "certNoOfQuarantine",
+                            //        certUrls = pictures
+                            //    };
+
+                            //    NewSyncFile.Sync(this.Context, appId, appSecret, newFile);
+
+                            //}
                         }
                     }
                     #endregion

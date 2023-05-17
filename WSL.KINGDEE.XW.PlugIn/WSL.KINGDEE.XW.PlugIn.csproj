@@ -72,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CheckDevelopPeriod.cs" />
     <Compile Include="Model\AccessTokenModel.cs" />
     <Compile Include="ApiHelper.cs" />
     <Compile Include="Model\BatchDetail.cs" />

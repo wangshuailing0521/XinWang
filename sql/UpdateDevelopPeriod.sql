@@ -1,0 +1,1 @@
+UPDATE T_YJ_DevelopPeriod SET FDate = '2023-05-25' WHERE FCompanyID = 1
