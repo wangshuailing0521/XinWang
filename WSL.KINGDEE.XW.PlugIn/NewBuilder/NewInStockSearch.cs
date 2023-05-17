@@ -320,7 +320,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                        ,ISNULL(F1.FDataValue,'') FCountry
                        ,ISNULL(F2.FDataValue,'') FProvince
                        ,ISNULL(F3.FDataValue,'') FCity
-                       ,B.FFieldID
+                       ,B.F_QRAU_XW0510 FFieldID
                   FROM  T_SCMS_ALLOTRECEIPT A
                         INNER JOIN T_SCMS_ALLOTRECEIPTENTRY B
                         ON A.FID = B.FID
