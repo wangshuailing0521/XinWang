@@ -317,6 +317,11 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                              Convert.ToInt64(orgId)
                               , 0L, "KCY_StockParameter", "FNewAppSecret", 0L);
 
+                    if (appIdValue == null)
+                    {
+                        continue;
+                    }
+
                     appId = appIdValue.ToString();
                     appSecret = appSecretValue.ToString();
 
@@ -324,6 +329,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                     {
                         continue;
                     }
+
                     #endregion
 
                     #region 物料处理，当物料未上传时，先上传物料

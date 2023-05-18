@@ -556,6 +556,11 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
                              Convert.ToInt64(orgId)
                               , 0L, "KCY_StockParameter", "FNewAppSecret", 0L);
 
+                    if (appIdValue == null)
+                    {
+                        continue;
+                    }
+
                     appId = appIdValue.ToString();
                     appSecret = appSecretValue.ToString();
 
