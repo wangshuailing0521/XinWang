@@ -721,7 +721,7 @@ namespace WSL.KINGDEE.XW.PlugIn.NewBuilder
 
                     DynamicObjectCollection supplierBase = supplierObj["SupplierBase"] as DynamicObjectCollection;
                     purchase.vendorAddr = supplierBase[0]["RegisterAddress"].ToString();
-                    purchase.vendorSocialCreditCode = supplierBase[0]["SOCIALCRECODE"].ToString();
+                    purchase.vendorSocialCreditCode = entry["FYYZH"].ToString();
 
                     if (entry["FPhone"] != null)
                     {
